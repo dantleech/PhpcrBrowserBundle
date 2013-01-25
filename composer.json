@@ -12,7 +12,7 @@
         "symfony/symfony": "2.2.x-dev"
     },
     "require-dev": {
-        "jackalope/jackalope-doctrine-dbal": "dev-master",
+        "jackalope/jackalope-doctrine-dbal": "dev-master"
     },
     "config": {
         "bin-dir": "bin"
