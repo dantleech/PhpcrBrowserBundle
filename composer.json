@@ -1,0 +1,21 @@
+{
+    "name": "dantleech/phpcr-browser-bundle",
+    "description": "PHPCR Browser",
+    "autoload": {
+        "psr-0": { "": "src/" }
+    },
+    "require": {
+        "doctrine/phpcr-bundle": "1.0.*",
+        "doctrine/phpcr-odm": "dev-master",
+        "php": ">=5.3.3",
+        "sonata-project/admin-bundle": "dev-master",
+        "symfony/symfony": "2.2.x-dev"
+    },
+    "require-dev": {
+        "jackalope/jackalope-doctrine-dbal": "dev-master",
+    },
+    "config": {
+        "bin-dir": "bin"
+    },
+    "minimum-stability": "dev"
+}
