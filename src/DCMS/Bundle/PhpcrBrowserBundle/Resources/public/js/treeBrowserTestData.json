@@ -1,0 +1,109 @@
+{ "sites" :  {
+    "id" : "/sites",
+    "name" : "sites",
+    "properties" : { 
+        "jcr:mixinTypes" : { 
+            "type" : "Name",
+            "value" : [ "phpcr:managed" ]
+        },
+        "jcr:primaryType" : { 
+            "type" : "Name",
+            "value" : "nt:unstructured"
+        },
+        "phpcr:class" : { 
+            "type" : "String",
+            "value" : "DCMS\\Bundle\\CoreBundle\\Document\\Folder"
+        },
+        "phpcr:classparents" : { 
+            "type" : "String",
+            "value" : [  ]
+        }
+    },
+    "children" : {
+        "dantleech.com" : { 
+            "id" : "/sites/dantleech.com",
+            "name" : "dantleech.com",
+            "properties" : { 
+                "jcr:mixinTypes" : { "type" : "Name",
+                    "value" : [ "phpcr:managed" ]
+                },
+                "jcr:primaryType" : { "type" : "Name",
+                    "value" : "nt:unstructured"
+                },
+                "phpcr:class" : { "type" : "String",
+                    "value" : "DCMS\\Bundle\\CoreBundle\\Document\\Site"
+                },
+                "phpcr:classparents" : { "type" : "String",
+                    "value" : [  ]
+                },
+                "preferences" : { "type" : "String",
+                    "value" : [ "1b613fbc-3f83-41b6-8b21-85b0c8cb8b18" ]
+                },
+                "preferencesMap" : { "type" : "String",
+                    "value" : [ "dcms_theme.default_layout_uuid" ]
+                }
+            },
+            "children": {
+                "endpoints" : { 
+                    "id" : "/sites/dantleech.com/endpoints",
+                    "name" : "endpoints",
+                    "properties" : { 
+                        "jcr:mixinTypes" : { 
+                            "type" : "Name",
+                            "value" : [ "phpcr:managed" ]
+                        },
+                        "jcr:primaryType" : { 
+                            "type" : "Name",
+                            "value" : "nt:unstructured"
+                        },
+                        "phpcr:class" : { 
+                            "type" : "String",
+                            "value" : "DCMS\\Bundle\\CoreBundle\\Document\\Folder"
+                        },
+                        "phpcr:classparents" : { 
+                            "type" : "String",
+                            "value" : [  ]
+                        }
+                    }
+                },
+                "menus" : { 
+                    "id" : "/sites/dantleech.com/menus",
+                    "name" : "menus",
+                    "properties" : { 
+                        "jcr:mixinTypes" : { 
+                            "type" : "Name",
+                            "value" : [ "phpcr:managed" ]
+                        },
+                        "jcr:primaryType" : { 
+                            "type" : "Name",
+                            "value" : "nt:unstructured"
+                        },
+                        "phpcr:class" : { 
+                            "type" : "String",
+                            "value" : "DCMS\\Bundle\\CoreBundle\\Document\\Folder"
+                        },
+                        "phpcr:classparents" : { "type" : "String",
+                            "value" : [  ]
+                        }
+                    }
+                },
+                "templates" : { "id" : "/sites/dantleech.com/templates",
+                    "name" : "templates",
+                    "properties" : { "jcr:mixinTypes" : { "type" : "Name",
+                        "value" : [ "phpcr:managed" ]
+                    },
+                    "jcr:primaryType" : { "type" : "Name",
+                        "value" : "nt:unstructured"
+                    },
+                    "phpcr:class" : { "type" : "String",
+                        "value" : "DCMS\\Bundle\\CoreBundle\\Document\\Folder"
+                    },
+                    "phpcr:classparents" : { "type" : "String",
+                        "value" : [  ]
+                    }
+                    }
+                }
+            }
+        } 
+    }
+}}

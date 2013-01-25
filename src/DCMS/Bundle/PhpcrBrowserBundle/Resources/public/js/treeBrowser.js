@@ -26,7 +26,7 @@
                 methods.refresh();
             },
 
-            'getChildren': function (id) {
+            'updateChildren': function (id) {
                 var children = $.ajax({
                     type: 'get',
                     data: {
@@ -64,7 +64,7 @@
                         nodeEl.find('ul').first().hide();
                         methods.refresh();
                     } else {
-                        methods.getChildren(nodeEl.attr('phpcrId'));
+                        methods.updateChildren(nodeEl.attr('phpcrId'));
                         nodeEl.attr('_state', 'expanded');
                         nodeEl.find('ul').first().show();
                         methods.refresh();
@@ -136,7 +136,7 @@
         } else {
             $.error( 'Method ' +  method + ' does not exist on jQuery.tooltip' );
         }
-
     };
 
 }) (jQuery)
+
