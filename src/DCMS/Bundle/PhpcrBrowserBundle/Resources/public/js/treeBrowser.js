@@ -1,142 +1,187 @@
+/**
+* Tree Browser
+ *
+ * Browser for looking at and modifying  
+ * document / node hierarchies
+ *
+ * Depends on:
+ *
+ *  - underscore.js
+ *  - jquery
+ *  - jquery-ui
+ *
+ * @author Daniel Leech <daniel@dantleech.com>
+ */
 (function($) {
-    $.fn.phpcrBrowser = function( method ) {
-        var options = {
-            path_get_children: null,
-            path_update_node: null,
-            class: {
-                expand_icon: 'icon-plus',
-                collapse_icon: 'icon-minus',
-                folder_closed_icon: 'icon-folder-close',
-                folder_open_icon: 'icon-folder-open',
-                property_icon: 'icon-flag',
-            },
-        }
+    $.widget("dtl.treeBrowser", {
+        options: {
 
-        var methods = {
-            'init': function (givenOptions) {
-                var rootAr = {
-                    id: '/',
-                    name: 'root',
-                    properties: [],
-                    children: []
-                }
-                rootEl = methods.renderNode(rootAr);
-                this.append(rootEl);
-                options = $.extend(options, givenOptions)
-                methods.refresh();
-            },
+            /** 
+             * Tree data object 
+             */
+            data: {},
 
-            'updateChildren': function (id) {
-                var children = $.ajax({
-                    type: 'get',
-                    data: {
-                        path: id
-                    },
-                    url: options.path_get_children,
-                    dataType: 'json',
-                    success: function (data) {
-                        methods.appendChildrenToNode(id, data)
-                        methods.refresh();
-                    }
-                })
-            },
-
-            'appendChildrenToNode': function (nodeId, children) {
-                var nodeEl = $('.phpcrNode[phpcrId="' + nodeId + '"]');
-                ulEl = nodeEl.find('ul');
-                ulEl.addClass(options.class.ul)
-                $.each(children, function (name, child) {
-                    var liEl = methods.renderNode(child);
-                    ulEl.append(liEl);
-                });
-                nodeEl.append(ulEl);
-            },
-
-            'refresh': function () {
-
-                // toggle expansion
-                $('.toggleexpand').unbind('click').bind('click', function () {
-                    var nodeEl = $(this).closest('.phpcrNode');
-
-                    if (nodeEl.attr('_state') == 'expanded') {
-                        $('.phpcrNode[phpcrId="' + nodeEl.attr('phpcrId') + '"]').find('.phpcrNode').remove();
-                        nodeEl.attr('_state', 'collapsed');
-                        nodeEl.find('ul').first().hide();
-                        methods.refresh();
-                    } else {
-                        methods.updateChildren(nodeEl.attr('phpcrId'));
-                        nodeEl.attr('_state', 'expanded');
-                        nodeEl.find('ul').first().show();
-                        methods.refresh();
-                    }
-
-                    return false;
-                });
-
-                // update the icons
-                $('.phpcrNode[_state="expanded"]').each(function () {
-                    $(this).find('i').first()
-                        .removeClass(options.class.expand_icon)
-                        .addClass(options.class.collapse_icon);
-                });
-                $('.phpcrNode[_state="collapsed"]').each(function () {
-                    $(this).find('i').first()
-                        .removeClass(options.class.collapse_icon)
-                        .addClass(options.class.expand_icon);
-                });
-            },
-
-            'renderNode': function (nodeAr) {
-                var nodeEl = $('<li class="phpcrNode" _state="collapsed"/>');
-                nodeEl.attr('phpcrName', nodeAr.name);
-                nodeEl.attr('phpcrId', nodeAr.id);
-                methods.renderRow(nodeEl, options.class.folder_closed_icon, nodeAr.name, '', '', true);
-
-                var childrenEl = $('<ul class="children"/>');
-                childrenEl.addClass(options.class.ul)
-                $.each(nodeAr.properties, function (propName, prop) {
-                    var propEl = $('<li class="property"/>');
-                    propEl.attr('phpcrName', propName);
-                    propEl.attr('phpcrValue', prop.value);
-                    propEl.attr('phpcrType', prop.type);
-
-                    methods.renderRow(propEl, options.class.property_icon, propName, prop.value, prop.type, false);
-                    childrenEl.append(propEl);
-                });
-                nodeEl.append(childrenEl);
-
-                return nodeEl;
-            },
-
-            'renderRow': function (rowEl, icon, name, value, type, hasChildren) {
-                var expandEl = $('<a class="toggleexpand" href="#"><i></i></a>');
-                var iconEl = $('<i/>');
-                var nameEl = $('<div class="phpcrName"/>')
-                var valueEl = $('<div class="phpcrValue"/>')
-                var typeEl = $('<div class="phpcrType"/>')
-
-                iconEl.addClass(icon);
-                nameEl.html('&nbsp;' + name);
-                valueEl.html(value);
-                typeEl.html(type);
-                nameEl.prepend(iconEl);
-                nameEl.prepend(expandEl);
-
-                rowEl
-                    .append(nameEl)
-                    .append(valueEl)
-                    .append(typeEl);
+            /**
+             * Templates
+             */
+            template: {
+                baseListEl: '<ul class="tbRootEl"/>',
+                nodeEl: '<li><i class="icon-folder-open"/>&nbsp;<%= name %></li>',
+                nodeExpandEl: '<i class="icon-plus"/>',
+                nodeCollapseEl: '<i class="icon-minus"/>',
+                nodeChildrenEl: '<ul/>',
+                nodePropertiesEl: '<ul/>',
+                nodePropertyEl: '<li><i class="icon-flag"/><%= name %> = <%= value %>(<%= type %>)</li>',
             }
-        }
+        },
 
-        if ( methods[method] ) {
-            return methods[method].apply( this, Array.prototype.slice.call( arguments, 1 ));
-        } else if ( typeof method === 'object' || ! method ) {
-            return methods.init.apply( this, arguments );
-        } else {
-            $.error( 'Method ' +  method + ' does not exist on jQuery.tooltip' );
-        }
-    };
+        /**
+         * Cache of compiled templates
+         *
+         * @var object
+         */
+        _compiledTemplate: {},
 
+        /**
+         * Constructor
+         */
+        _create: function () {
+        },
+
+        /**
+         * Render the named template
+         *
+         * @private
+         *
+         * @param string name
+         * @param object params
+         *
+         * @return DOMElement
+         */
+        _template: function (name, params) {
+            if (this.options.template[name] == undefined) {
+                $.error('Template ' + name + ' is undefined');
+            }
+
+            if (this._compiledTemplate[name] != undefined) {
+                return $(this._compiledTemplate[name](params));
+            }
+
+            this._compiledTemplate[name] = _.template(this.options.template[name]);
+
+            return this._template(name, params);
+        },
+
+        /**
+         * Render a given node object recursively
+         *
+         * @private
+         *
+         * @param DOMElement parentEl
+         * @param object data
+         */
+        _renderNode: function (parentEl, data) {
+            var $this = this;
+            var nodeEl = this._template('nodeEl', data);
+
+            if (data.id == undefined) {
+                console.log(data);
+                $.error('Data element has no ID');
+            }
+
+            nodeEl.attr('_tbId', data.id);
+            nodeEl.addClass('tbNode');
+
+            // render node children
+            if (data.children != undefined) {
+                var nodeChildrenEl = this._template('nodeChildrenEl', {});
+                $.each(data.children, function (i, child) {
+                    var childEl = $this._renderNode(nodeChildrenEl, child);
+                    nodeChildrenEl.append(childEl);
+                });
+                nodeEl.append(nodeChildrenEl);
+            }
+
+            // render node properties
+            if (data.properties != undefined) {
+                var nodePropertiesEl = this._template('nodePropertiesEl', {});
+                $.each(data.properties, function (name, prop) {
+                    var propData = $.extend(prop, {'name': name});
+                    var propertyEl = $this._template('nodePropertyEl', propData);
+                    nodePropertiesEl.append(propertyEl);
+                });
+
+                nodeEl.append(nodePropertiesEl);
+            }
+
+            // expand / collapse element
+            nodeEl.prepend('<span class="tbToggleExpand"/>');
+            this._collapseNode(nodeEl);
+
+            return nodeEl;
+        },
+
+        _collapseNode: function (nodeEl) {
+            nodeEl.attr('_expanded', 'no');
+            var toggleExpansionNode = nodeEl.find('.tbToggleExpand').first();
+            var expandEl = this._template('nodeExpandEl', {});
+            toggleExpansionNode.empty().append(expandEl);
+            nodeEl.find('> ul').hide();
+        },
+
+        _expandNode: function (nodeEl) {
+            nodeEl.attr('_expanded', 'yes');
+            var toggleExpansionNode = nodeEl.find('.tbToggleExpand').first();
+            var collapseEl = this._template('nodeCollapseEl', {});
+            toggleExpansionNode.empty().append(collapseEl);
+
+            nodeEl.find('> ul').show();
+        },
+
+        /**
+         * Apply some generic CSS fixes on the base element
+         * before adding to the DOM
+         */
+        _applyCssHacks: function (baseEl) {
+            baseEl.find('ul').css('list-style', 'none');
+            baseEl.css('list-style', 'none');
+        },
+
+        /**
+         * Bind events to the tree
+         */
+        _applyEvents: function (baseEl) {
+            var $this = this;
+            baseEl.find('.tbToggleExpand').unbind('click').bind('click', function () {
+                var nodeEl = $(this).closest('.tbNode');
+                if (nodeEl.attr('_expanded') == 'yes') {
+                    $this._collapseNode(nodeEl);
+                } else {
+                    $this._expandNode(nodeEl);
+                }
+            });
+        },
+
+        /**
+         * Set the data object
+         *
+         * @param object data
+         */
+        setData: function (data) {
+            this._setOption("data", data);
+        },
+
+        /**
+         * Refresh the tree
+         */
+        refresh: function () {
+            var baseEl = this._template('baseListEl', this.options.data);
+            var childEl = this._renderNode(baseEl, this.options.data);
+            baseEl.append(childEl);
+            this._applyCssHacks(baseEl);
+            this._applyEvents(baseEl);
+            this.element.empty();
+            this.element.append(baseEl);
+        }
+    });
 }) (jQuery)
-
